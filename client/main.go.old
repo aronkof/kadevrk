@@ -1,0 +1,85 @@
+package not_main
+
+import (
+	"context"
+	"fmt"
+	"log"
+	"os"
+	"os/signal"
+	"syscall"
+
+	"github.com/aronkof/kadev-rk/client"
+	"github.com/aronkof/kadev-rk/listener"
+	"github.com/aronkof/kadev-rk/parser"
+	"google.golang.org/grpc"
+)
+
+const (
+	host = "192.168.15.70"
+	port = "50051"
+)
+
+func main() {
+	cmdCtx, cancel := context.WithCancel(context.Background())
+
+	defer cancel()
+
+	ksCh, err := listener.StartKeyboardListener(cmdCtx)
+	if err != nil {
+		log.Fatalf("could not start keyboard listener, %s", err)
+	}
+
+	rkc := client.NewRemoteKeyClient(host, port)
+
+	err = rkc.Dial()
+	if err != nil {
+		log.Fatalf("could not Dial target, %s", err)
+	}
+
+	ctx := context.Background()
+	stream, err := rkc.KeySignalStream(ctx)
+	if err != nil {
+		fmt.Printf("could not open KeySignal stream, %s\n", err)
+		os.Exit(1)
+	}
+
+	go gracefulShutdown(cancel, rkc.ClientConn)
+
+	for rawKs := range ksCh {
+		keySignal, err := parser.ParseToKeySignal(rawKs)
+		if err != nil {
+			fmt.Printf("could not parse raw key signal, %s", err)
+			continue
+		}
+
+		fmt.Printf("code: %v, ev: %v\n", keySignal.Code, keySignal.Event)
+
+		err = stream.Send(keySignal)
+		if err != nil {
+			fmt.Printf("could not send to KeySignal stream, %s", err)
+		}
+	}
+
+	rkc.ClientConn.Close()
+
+	fmt.Println("listener manually interrupted, exiting")
+	os.Exit(0)
+}
+
+func gracefulShutdown(cmdCtxCancel context.CancelFunc, conn *grpc.ClientConn) {
+	signalChannel := make(chan os.Signal, 1)
+	signal.Notify(signalChannel, os.Interrupt, syscall.SIGINT, syscall.SIGTERM)
+	<-signalChannel
+	fmt.Println("interrupt signal detected, shutting down")
+
+	cmdCtxCancel()
+	err := conn.Close()
+	if err != nil {
+		fmt.Printf("could not close grpc client connection, %s\n", err)
+		os.Exit(1)
+	}
+
+	fmt.Println("command and grpc client connection shutdown was successful")
+
+	os.Exit(0)
+}
