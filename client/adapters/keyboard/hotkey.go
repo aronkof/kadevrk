@@ -8,8 +8,8 @@ type Hotkey struct {
 }
 
 const (
-	toggle_hk_id = 101
-	exit_hk_id   = 102
+	toggle_hk_id = 118
+	exit_hk_id   = 119
 )
 
 const (
