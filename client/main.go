@@ -1,36 +1,46 @@
 package main
 
 import (
-	"context"
+	"flag"
 	"fmt"
 	"log"
 	"os"
 
-	"github.com/aronkof/kadev-rk/client"
-	"github.com/aronkof/kadev-rk/keyboard"
+	"github.com/aronkof/kadev-rk/adapters/keyboard"
+	"github.com/aronkof/kadev-rk/adapters/udp"
 	"github.com/aronkof/kadev-rk/pb"
 )
 
-const (
-	host     = "192.168.15.70"
-	port     = "19901"
-	clientOs = "windows10"
+var (
+	port     int
+	debug    bool
+	clientOs string
 )
 
 func main() {
-	rkc := client.NewRemoteKeyClient(host, port)
+	flag.StringVar(&clientOs, "os", "windows-10", "client OS (default windows-10)")
+	flag.IntVar(&port, "port", 19901, "port number (default 19901)")
+	flag.BoolVar(&debug, "debug", false, "enables debug mode")
 
-	err := rkc.Dial()
-	if err != nil {
-		log.Fatalf("could not Dial target, %s", err)
+	flag.Usage = func() {
+		fmt.Fprintf(os.Stderr, "usage: %s [options] <host>\n", os.Args[0])
+		flag.PrintDefaults()
 	}
 
-	ctx := context.Background()
+	flag.Parse()
+	args := flag.Args()
 
-	stream, err := rkc.KeySignalStream(ctx)
-	if err != nil {
-		fmt.Printf("could not open KeySignal stream, %s\n", err)
+	if len(os.Args) < 2 {
+		fmt.Fprintln(os.Stderr, "error: host is required")
+		flag.Usage()
 		os.Exit(1)
+	}
+
+	host := args[0]
+
+	rkc, err := udp.NewRemoteKeyClient(host, port)
+	if err != nil {
+		log.Fatalf("could not create new RemoteKeyClient, %s", err)
 	}
 
 	kbListener := keyboard.NewKBListener()
@@ -50,43 +60,15 @@ func main() {
 
 	err = kbListener.StartListener()
 	if err != nil {
-		fmt.Println("startup error:", err)
-		os.Exit(1)
+		log.Fatalf("startup error: %s", err)
 	}
 
 	for ks := range kbListener.KeyStrokes() {
-		err = stream.Send(&pb.KeySignal{Code: int64(ks.Code), Event: int64(ks.Event), Os: clientOs})
+		err = rkc.Send(&pb.KeySignal{Code: int64(ks.Code), Event: int64(ks.Event), Os: clientOs})
 		if err != nil {
 			fmt.Printf("could not send to KeySignal stream, %s\n", err)
-			fmt.Println("restablishing kc stream ... ")
-			stream, err := restablishStream(ctx, stream, rkc)
-			if err != nil {
-				fmt.Printf("could not restablish kc stream, %s\n", err)
-				os.Exit(1)
-			}
-
-			err = stream.Send(&pb.KeySignal{Code: int64(ks.Code), Event: int64(ks.Event), Os: clientOs})
-			if err != nil {
-				fmt.Println("send retry failed, exiting ...")
-				os.Exit(1)
-			}
 		}
 	}
 
-	rkc.ClientConn.Close()
 	os.Exit(0)
-}
-
-func restablishStream(ctx context.Context, oldStream pb.RemoteKey_KeySignalStreamClient, rkc *client.RemoteKeyClient) (pb.RemoteKey_KeySignalStreamClient, error) {
-	_, err := oldStream.CloseAndRecv()
-	if err != nil {
-		return nil, err
-	}
-
-	newStream, err := rkc.KeySignalStream(ctx)
-	if err != nil {
-		return nil, err
-	}
-
-	return newStream, nil
 }

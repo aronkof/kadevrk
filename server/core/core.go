@@ -11,13 +11,13 @@ type VirtualKbd interface {
 	io.Closer
 }
 
-type KeyStroke struct {
-	Code       uint
-	IsModifier bool
-}
-
 type Translator interface {
 	Translate(os string, code int) (KeyStroke, error)
+}
+
+type KeyStroke struct {
+	Code       int
+	IsModifier bool
 }
 
 type Dependencies struct {

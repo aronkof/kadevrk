@@ -10,14 +10,16 @@ import (
 	"google.golang.org/protobuf/proto"
 )
 
-type RemoteKeyServer struct {
-	rk      *core.Rk
+type UdpHandler func(data []byte) error
+
+type UdpServer struct {
 	port    int
 	udpConn *net.UDPConn
 	cancel  context.CancelFunc
+	rk      *core.Rk
 }
 
-func New(rk *core.Rk, port int) (*RemoteKeyServer, error) {
+func New(port int, rk *core.Rk) (*UdpServer, error) {
 	addr := net.UDPAddr{Port: port, IP: net.ParseIP("0.0.0.0")}
 
 	conn, err := net.ListenUDP("udp", &addr)
@@ -25,42 +27,44 @@ func New(rk *core.Rk, port int) (*RemoteKeyServer, error) {
 		return nil, fmt.Errorf("error starting UDP server, %w", err)
 	}
 
-	return &RemoteKeyServer{
-		rk:      rk,
+	return &UdpServer{
 		port:    port,
 		udpConn: conn,
-		cancel:  nil,
+		rk:      rk,
 	}, nil
 }
 
-func (rks *RemoteKeyServer) Start(ctx context.Context) error {
+func (us *UdpServer) Start(ctx context.Context) error {
 	ctx, cancel := context.WithCancel(ctx)
-	rks.cancel = cancel
+	us.cancel = cancel
 
 	buffer := make([]byte, 4096)
+
+	fmt.Println("udp server started ...")
 
 	for {
 		select {
 		case <-ctx.Done():
 			fmt.Println("stopping udp server ...")
-			rks.udpConn.Close()
 			return nil
 		default:
-			n, _, err := rks.udpConn.ReadFromUDP(buffer)
+			n, _, err := us.udpConn.ReadFromUDP(buffer)
 			if err != nil {
 				fmt.Println("error reading from UDP:", err)
 				continue
 			}
 
+			data := buffer[:n]
+
 			var ks pb.KeySignal
 
-			err = proto.Unmarshal(buffer[:n], &ks)
+			err = proto.Unmarshal(data, &ks)
 			if err != nil {
-				fmt.Println("error unmarshaling key signal:", err)
+				fmt.Printf("error unmarshaling key signal: %s\n", err)
 				continue
 			}
 
-			err = rks.rk.DispatchKeyEvent(ks.Os, int(ks.Code), ks.KeyDown)
+			err = us.rk.DispatchKeyEvent(ks.Os, int(ks.Code), ks.KeyDown)
 			if err != nil {
 				fmt.Printf("dispatch key error: %s\n", err)
 			}
@@ -68,4 +72,7 @@ func (rks *RemoteKeyServer) Start(ctx context.Context) error {
 	}
 }
 
-func (rks *RemoteKeyServer) Shutdown() { rks.cancel() }
+func (us *UdpServer) Shutdown() {
+	us.cancel()
+	us.udpConn.Close()
+}

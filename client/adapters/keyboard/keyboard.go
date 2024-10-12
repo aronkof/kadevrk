@@ -12,17 +12,6 @@ type KeyStroke struct {
 	Event int16
 }
 
-func toggleScrollLock() {
-	sendInput(0x91, 0x0001)
-	sendInput(0x91, 0x0002)
-}
-
-func disableScrollLock() {
-	if isKeyStateActive(0x91) {
-		toggleScrollLock()
-	}
-}
-
 func llkpFn(kb *kbListener) HOOKPROC {
 	return func(nCode int, wparam WPARAM, lparam LPARAM) LRESULT {
 		if nCode == HC_ACTION {
@@ -80,8 +69,6 @@ func (kb *kbListener) StartListener() error {
 
 	kb.wg.Add(1)
 
-	disableScrollLock()
-
 	go func() {
 		var msg MSG
 
@@ -94,8 +81,6 @@ func (kb *kbListener) StartListener() error {
 
 				if msg.WParam == toggle_hk_id {
 					kb.active = !kb.active
-
-					toggleScrollLock()
 
 					if kb.active {
 						kb.hHook = setWindowsHookEx(WH_KEYBOARD_LL, llkpFn(kb), 0, 0)
@@ -111,8 +96,6 @@ func (kb *kbListener) StartListener() error {
 
 		unhookWindowsHookEx(kb.hHook)
 		close(kb.keyStrokes)
-
-		disableScrollLock()
 	}()
 
 	return nil

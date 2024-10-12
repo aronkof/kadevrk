@@ -14,6 +14,9 @@ func win10Translate(code int) (core.KeyStroke, error) {
 		return core.KeyStroke{Code: uinput.KeyLeftctrl, IsModifier: true}, nil
 	case 164:
 		return core.KeyStroke{Code: uinput.KeyLeftalt, IsModifier: true}, nil
+	case 91:
+		return core.KeyStroke{Code: uinput.KeyLeftmeta, IsModifier: false}, nil
+	// ---- modifiers ---- //
 
 	case 8:
 		return core.KeyStroke{Code: uinput.KeyBackspace, IsModifier: false}, nil
@@ -120,8 +123,6 @@ func win10Translate(code int) (core.KeyStroke, error) {
 		return core.KeyStroke{Code: uinput.KeyY, IsModifier: false}, nil
 	case 90:
 		return core.KeyStroke{Code: uinput.KeyZ, IsModifier: false}, nil
-	case 91:
-		return core.KeyStroke{Code: uinput.KeyLeftmeta, IsModifier: false}, nil
 	}
 
 	// VK_MULTIPLY	106	Multiply key
