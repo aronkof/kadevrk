@@ -13,9 +13,8 @@ import (
 )
 
 const (
-	MAX_CLIENTS = 4
-	PORT        = "19901"
-	KBD_NAME    = "kadevrk-virtual-keyboard"
+	PORT     = "19901"
+	KBD_NAME = "kadevrk-virtual-keyboard"
 )
 
 func main() {
@@ -34,7 +33,7 @@ func start() error {
 	defer kbd.Close()
 
 	rksDeps := core.Dependencies{VirtualKbd: kbd}
-	rkSvc := core.NewRks(&rksDeps, MAX_CLIENTS)
+	rkSvc := core.NewRks(&rksDeps)
 
 	rks := grpc.New(rkSvc, PORT)
 

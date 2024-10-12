@@ -2,7 +2,6 @@ package core
 
 import (
 	"io"
-	"sync/atomic"
 )
 
 type VirtualKbd interface {
@@ -12,16 +11,25 @@ type VirtualKbd interface {
 	io.Closer
 }
 
+type KeyStroke struct {
+	Code       uint
+	IsModifier bool
+}
+
+type Translator interface {
+	Translate(os string, code int) (KeyStroke, error)
+}
+
 type Dependencies struct {
 	VirtualKbd VirtualKbd
+	Translator Translator
 }
 
 type Rk struct {
-	maxClients  int32
-	currClients atomic.Int32
-	kbd         VirtualKbd
+	kbd        VirtualKbd
+	translator Translator
 }
 
-func NewRks(d *Dependencies, maxClients int32) *Rk {
-	return &Rk{kbd: d.VirtualKbd, maxClients: maxClients}
+func NewRks(d *Dependencies) *Rk {
+	return &Rk{kbd: d.VirtualKbd, translator: d.Translator}
 }

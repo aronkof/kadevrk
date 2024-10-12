@@ -1,6 +1,6 @@
 module github.com/aronkof/kadev-rk
 
-go 1.19
+go 1.23.1
 
 require (
 	golang.org/x/sys v0.3.0

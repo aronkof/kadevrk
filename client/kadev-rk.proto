@@ -6,7 +6,7 @@ option go_package = "./pb";
 
 message KeySignal {
   int64 code = 1;
-  int64 event = 2;
+  bool keydown = 2;
   string os = 3;
 }
 
