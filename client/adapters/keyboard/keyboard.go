@@ -47,8 +47,8 @@ func NewKBListener() *kbListener {
 	wg := sync.WaitGroup{}
 
 	kb := kbListener{
-		toggleHk:   &Hotkey{0, 0x7D},
-		exitHk:     &Hotkey{0, 0x7E},
+		toggleHk:   &Hotkey{0, 0x76},
+		exitHk:     &Hotkey{0, 0x77},
 		active:     false,
 		keyStrokes: keyStrokes,
 		wg:         &wg,
