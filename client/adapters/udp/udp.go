@@ -13,16 +13,7 @@ type RemoteKeySender interface {
 }
 
 type RemoteKeyClient struct {
-	conn      *net.UDPConn
-	debugMode bool
-}
-
-type option func(*RemoteKeyClient)
-
-func WithDebugModeOn() option {
-	return func(rkc *RemoteKeyClient) {
-		rkc.debugMode = true
-	}
+	conn *net.UDPConn
 }
 
 func NewRemoteKeyClient(host string, port int, debugMode bool) (RemoteKeySender, error) {

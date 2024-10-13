@@ -9,7 +9,10 @@ type Hotkey struct {
 
 const (
 	toggle_hk_id = 118
-	exit_hk_id   = 119
+	toggle_hk_kc = 0x76
+
+	exit_hk_id = 119
+	exit_hk_kc = 0x77
 )
 
 const (

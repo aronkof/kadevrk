@@ -45,19 +45,6 @@ func main() {
 
 	kbListener := keyboard.NewKBListener()
 
-	kbListener.ByPassKeys = map[int16]bool{
-		0x7C: true,
-		0x7D: true,
-		0x7E: true,
-		0x7F: true,
-		0x80: true,
-		0x81: true,
-		0x82: true,
-		0x83: true,
-		0x84: true,
-		0x91: true,
-	}
-
 	err = kbListener.StartListener()
 	if err != nil {
 		log.Fatalf("startup error: %s", err)

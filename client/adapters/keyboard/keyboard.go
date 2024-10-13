@@ -7,9 +7,29 @@ import (
 
 const HC_ACTION = 0
 
+type option func(*kbListener)
+
+func WithKeysBypassList(keys []int16) option {
+	return func(rkc *kbListener) {
+		for _, kc := range keys {
+			rkc.byPassKeys[kc] = true
+		}
+	}
+}
+
 type KeyStroke struct {
 	Code  int16
 	Event int16
+}
+
+type kbListener struct {
+	toggleHk   *Hotkey
+	exitHk     *Hotkey
+	keyStrokes chan KeyStroke
+	active     bool
+	hHook      HHOOK
+	wg         *sync.WaitGroup
+	byPassKeys map[int16]bool
 }
 
 func llkpFn(kb *kbListener) HOOKPROC {
@@ -19,7 +39,7 @@ func llkpFn(kb *kbListener) HOOKPROC {
 
 			vkCode := int16(kbdstruct.VkCode)
 
-			_, shouldByPass := kb.ByPassKeys[vkCode]
+			_, shouldByPass := kb.byPassKeys[vkCode]
 
 			kb.keyStrokes <- KeyStroke{Code: vkCode, Event: int16(wparam)}
 
@@ -32,26 +52,25 @@ func llkpFn(kb *kbListener) HOOKPROC {
 	}
 }
 
-type kbListener struct {
-	toggleHk   *Hotkey
-	exitHk     *Hotkey
-	keyStrokes chan KeyStroke
-	active     bool
-	hHook      HHOOK
-	wg         *sync.WaitGroup
-	ByPassKeys map[int16]bool
-}
-
-func NewKBListener() *kbListener {
+func NewKBListener(opts ...option) *kbListener {
 	keyStrokes := make(chan KeyStroke)
 	wg := sync.WaitGroup{}
 
+	byPassKeys := make(map[int16]bool, 50)
+	byPassKeys[toggle_hk_kc] = true
+	byPassKeys[exit_hk_kc] = true
+
 	kb := kbListener{
-		toggleHk:   &Hotkey{0, 0x76},
-		exitHk:     &Hotkey{0, 0x77},
+		toggleHk:   &Hotkey{0, toggle_hk_kc},
+		exitHk:     &Hotkey{0, exit_hk_kc},
 		active:     false,
 		keyStrokes: keyStrokes,
 		wg:         &wg,
+		byPassKeys: byPassKeys,
+	}
+
+	for _, opt := range opts {
+		opt(&kb)
 	}
 
 	return &kb
