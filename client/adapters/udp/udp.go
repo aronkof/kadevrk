@@ -25,14 +25,8 @@ func WithDebugModeOn() option {
 	}
 }
 
-func NewRemoteKeyClient(host string, port int, opts ...option) (RemoteKeySender, error) {
-	var rkc RemoteKeyClient
-
-	for _, opt := range opts {
-		opt(&rkc)
-	}
-
-	if rkc.debugMode {
+func NewRemoteKeyClient(host string, port int, debugMode bool) (RemoteKeySender, error) {
+	if debugMode {
 		return &DebugRemoteKeyClient{}, nil
 	}
 

@@ -38,7 +38,7 @@ func main() {
 
 	host := args[0]
 
-	rkc, err := udp.NewRemoteKeyClient(host, port)
+	rkc, err := udp.NewRemoteKeyClient(host, port, debug)
 	if err != nil {
 		log.Fatalf("could not create new RemoteKeyClient, %s", err)
 	}
