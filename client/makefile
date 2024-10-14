@@ -2,7 +2,7 @@ build:
 	GOOS=windows go build -o rk-client.exe
 
 gen-proto:
-	protoc --go_out=. --go-grpc_out=. -I . kadev-rk.proto
+	protoc --go_out=. -I . kadev-rk.proto
 
 clean-deps:
 	del /f .\deps\gkl.exe

@@ -9,10 +9,3 @@ message KeySignal {
   bool keydown = 2;
   string os = 3;
 }
-
-message Void{}
-
-service RemoteKey {
-  rpc KeySignalStream(stream KeySignal) returns(Void) {}
-}
-

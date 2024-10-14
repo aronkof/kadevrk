@@ -51,9 +51,7 @@ func main() {
 	}
 
 	for ks := range kbListener.KeyStrokes() {
-		fmt.Println(ks.Code, ks.Event, clientOs)
-
-		err = rkc.Send(&pb.KeySignal{Code: int64(ks.Code), Event: int64(ks.Event), Os: clientOs})
+		err = rkc.Send(&pb.KeySignal{Code: int64(ks.Code), Keydown: ks.Keydown, Os: clientOs})
 		if err != nil {
 			fmt.Printf("could not send to KeySignal stream, %s\n", err)
 		}

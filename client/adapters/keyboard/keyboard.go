@@ -1,6 +1,7 @@
 package keyboard
 
 import (
+	"fmt"
 	"sync"
 	"unsafe"
 )
@@ -18,8 +19,8 @@ func WithKeysBypassList(keys []int16) option {
 }
 
 type KeyStroke struct {
-	Code  int16
-	Event int16
+	Code    int16
+	Keydown bool
 }
 
 type kbListener struct {
@@ -41,7 +42,7 @@ func llkpFn(kb *kbListener) HOOKPROC {
 
 			_, shouldByPass := kb.byPassKeys[vkCode]
 
-			kb.keyStrokes <- KeyStroke{Code: vkCode, Event: int16(wparam)}
+			kb.keyStrokes <- KeyStroke{Code: vkCode, Keydown: parseWParamToKeydown(wparam)}
 
 			if shouldByPass {
 				return callNextHookEx(keyboardHook, nCode, wparam, lparam)
@@ -118,4 +119,20 @@ func (kb *kbListener) StartListener() error {
 	}()
 
 	return nil
+}
+
+func parseWParamToKeydown(wparam WPARAM) bool {
+	parsedWPARAM := int16(wparam)
+
+	if parsedWPARAM == 256 {
+		return true
+	}
+
+	if parsedWPARAM == 257 {
+		return false
+	}
+
+	fmt.Println("warning: unknown wparam value", parsedWPARAM, "defaulting to 'false' keydown event")
+
+	return false
 }
