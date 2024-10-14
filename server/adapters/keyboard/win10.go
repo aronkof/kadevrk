@@ -12,12 +12,14 @@ func win10Translate(code int) (core.KeyStroke, error) {
 	switch code {
 	// ---- modifiers ---- //
 	case 91:
-		return core.KeyStroke{Code: uinput.KeyLeftmeta, IsModifier: false}, nil
+		return core.KeyStroke{Code: uinput.KeyLeftmeta, IsModifier: true}, nil
 	case 160:
 		return core.KeyStroke{Code: uinput.KeyLeftshift, IsModifier: true}, nil
 	case 162:
 		return core.KeyStroke{Code: uinput.KeyLeftctrl, IsModifier: true}, nil
 	case 164:
+		return core.KeyStroke{Code: uinput.KeyLeftalt, IsModifier: true}, nil
+	case 260:
 		return core.KeyStroke{Code: uinput.KeyLeftalt, IsModifier: true}, nil
 	// ---- modifiers ---- //
 

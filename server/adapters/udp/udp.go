@@ -64,8 +64,6 @@ func (us *UdpServer) Start(ctx context.Context) error {
 				continue
 			}
 
-			fmt.Println(data, ks.Code, ks.Os, ks.Keydown)
-
 			err = us.rk.DispatchKeyEvent(ks.Os, int(ks.Code), ks.Keydown)
 			if err != nil {
 				fmt.Printf("dispatch key error: %s\n", err)

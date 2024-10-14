@@ -16,12 +16,8 @@ func (rk *Rk) DispatchKeyEvent(os string, code int, keyDown bool) error {
 		return nil
 	}
 
-	if keyDown && keyStroke.IsModifier {
-		if keyStroke.IsModifier {
-			return rk.kbd.KeyDown(keyStroke.Code)
-		} else {
-			return rk.kbd.KeyPress(keyStroke.Code)
-		}
+	if keyDown {
+		return rk.kbd.KeyDown(keyStroke.Code)
 	}
 
 	return rk.kbd.KeyUp(keyStroke.Code)
