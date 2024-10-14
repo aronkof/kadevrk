@@ -126,15 +126,13 @@ func (kb *kbListener) StartListener() error {
 func parseWParamToKeydown(wparam WPARAM) bool {
 	parsedWPARAM := int16(wparam)
 
-	if parsedWPARAM == 256 {
+	switch parsedWPARAM {
+	case 256, 260, 261:
 		return true
-	}
-
-	if parsedWPARAM == 257 {
+	case 257:
+		return false
+	default:
+		fmt.Println("warning: unknown wparam value", parsedWPARAM, "defaulting to 'false' keydown event")
 		return false
 	}
-
-	fmt.Println("warning: unknown wparam value", parsedWPARAM, "defaulting to 'false' keydown event")
-
-	return false
 }
