@@ -42,6 +42,8 @@ func llkpFn(kb *kbListener) HOOKPROC {
 
 			_, shouldByPass := kb.byPassKeys[vkCode]
 
+			fmt.Printf("[DEBUG] vkcode: %d, wparam: %d\n", vkCode, int16(wparam))
+
 			kb.keyStrokes <- KeyStroke{Code: vkCode, Keydown: parseWParamToKeydown(wparam)}
 
 			if shouldByPass {
@@ -53,7 +55,7 @@ func llkpFn(kb *kbListener) HOOKPROC {
 	}
 }
 
-func NewKBListener(opts ...option) *kbListener {
+func NewKBListener(debug bool, opts ...option) *kbListener {
 	keyStrokes := make(chan KeyStroke)
 	wg := sync.WaitGroup{}
 

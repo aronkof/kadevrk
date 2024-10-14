@@ -43,7 +43,7 @@ func main() {
 		log.Fatalf("could not create new RemoteKeyClient, %s", err)
 	}
 
-	kbListener := keyboard.NewKBListener()
+	kbListener := keyboard.NewKBListener(debug)
 
 	err = kbListener.StartListener()
 	if err != nil {
