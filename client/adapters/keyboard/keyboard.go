@@ -31,6 +31,7 @@ type kbListener struct {
 	hHook      HHOOK
 	wg         *sync.WaitGroup
 	byPassKeys map[int16]bool
+	debug      bool
 }
 
 func llkpFn(kb *kbListener) HOOKPROC {
@@ -42,7 +43,9 @@ func llkpFn(kb *kbListener) HOOKPROC {
 
 			_, shouldByPass := kb.byPassKeys[vkCode]
 
-			fmt.Printf("[DEBUG] vkcode: %d, wparam: %d\n", vkCode, int16(wparam))
+			if kb.debug {
+				fmt.Printf("[DEBUG] vkcode: %d, wparam: %d\n", vkCode, int16(wparam))
+			}
 
 			kb.keyStrokes <- KeyStroke{Code: vkCode, Keydown: parseWParamToKeydown(wparam)}
 
@@ -70,6 +73,7 @@ func NewKBListener(debug bool, opts ...option) *kbListener {
 		keyStrokes: keyStrokes,
 		wg:         &wg,
 		byPassKeys: byPassKeys,
+		debug:      debug,
 	}
 
 	for _, opt := range opts {
@@ -127,9 +131,9 @@ func parseWParamToKeydown(wparam WPARAM) bool {
 	parsedWPARAM := int16(wparam)
 
 	switch parsedWPARAM {
-	case 256, 260, 261:
+	case 256, 260:
 		return true
-	case 257:
+	case 257, 261:
 		return false
 	default:
 		fmt.Println("warning: unknown wparam value", parsedWPARAM, "defaulting to 'false' keydown event")
