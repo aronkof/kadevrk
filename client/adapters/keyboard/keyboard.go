@@ -106,6 +106,11 @@ func (kb *kbListener) StartListener() error {
 				}
 
 				if msg.WParam == toggle_hk_id {
+					defer func() {
+						// ensure that the hotkey is being "release" on the server side
+						kb.keyStrokes <- KeyStroke{Code: toggle_hk_kc, Keydown: false}
+					}()
+
 					kb.active = !kb.active
 
 					if kb.active {
