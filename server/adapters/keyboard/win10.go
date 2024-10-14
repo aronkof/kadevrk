@@ -19,8 +19,6 @@ func win10Translate(code int) (core.KeyStroke, error) {
 		return core.KeyStroke{Code: uinput.KeyLeftctrl, IsModifier: true}, nil
 	case 164:
 		return core.KeyStroke{Code: uinput.KeyLeftalt, IsModifier: true}, nil
-	case 260:
-		return core.KeyStroke{Code: uinput.KeyLeftalt, IsModifier: true}, nil
 	// ---- modifiers ---- //
 
 	// ---- non alphanumeric ---- //
