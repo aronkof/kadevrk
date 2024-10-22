@@ -47,7 +47,7 @@ func llkpFn(kb *kbListener) HOOKPROC {
 				fmt.Printf("[DEBUG] vkcode: %d, wparam: %d\n", vkCode, int16(wparam))
 			}
 
-			if vkCode != toggle_hk_kc {
+			if vkCode != toggle_hk_kc || vkCode != exit_hk_kc {
 				kb.keyStrokes <- KeyStroke{Code: vkCode, Keydown: parseWParamToKeydown(wparam)}
 			}
 
