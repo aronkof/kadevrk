@@ -13,6 +13,8 @@ const (
 
 	exit_hk_id = 119
 	exit_hk_kc = 0x77
+
+	emergency_hk_kc = 117
 )
 
 const (
