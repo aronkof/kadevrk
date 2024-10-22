@@ -107,12 +107,24 @@ func (kb *kbListener) StartListener() error {
 
 		for getMessage(&msg, 0, 0, 0) != 0 {
 			if msg.Message == WM_HOTKEY {
+				if kb.debug {
+					fmt.Print("hotkey detected: ")
+				}
+
 				if msg.WParam == exit_hk_id {
+					if kb.debug {
+						fmt.Print("exit")
+					}
+
 					kb.wg.Done()
 					break
 				}
 
 				if msg.WParam == toggle_hk_id {
+					if kb.debug {
+						fmt.Print("toggle")
+					}
+
 					kb.active = !kb.active
 
 					if kb.active {
