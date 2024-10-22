@@ -52,12 +52,24 @@ func main() {
 		log.Fatalf("startup error: %s", err)
 	}
 
-	for ks := range kbListener.KeyStrokes() {
-		err = rkc.Send(&pb.KeySignal{Code: int64(ks.Code), Keydown: ks.Keydown, Os: clientOs})
-		if err != nil {
-			fmt.Printf("could not send to KeySignal stream, %s\n", err)
+	go func() {
+		for ks := range kbListener.KeyStrokes() {
+			err = rkc.Send(&pb.KeySignal{Code: int64(ks.Code), Keydown: ks.Keydown, Os: clientOs})
+			if err != nil {
+				fmt.Printf("could not send to KeySignal stream, %s\n", err)
+			}
 		}
-	}
+
+		process, err := os.FindProcess(os.Getpid())
+		if err != nil {
+			fmt.Println("error finding process:", err)
+		}
+
+		err = process.Signal(syscall.SIGTERM)
+		if err != nil {
+			fmt.Println("error sending SIGTERM:", err)
+		}
+	}()
 
 	gracefulShutdown(kbListener)
 
