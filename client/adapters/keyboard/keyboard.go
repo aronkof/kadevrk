@@ -47,7 +47,9 @@ func llkpFn(kb *kbListener) HOOKPROC {
 				fmt.Printf("[DEBUG] vkcode: %d, wparam: %d\n", vkCode, int16(wparam))
 			}
 
-			kb.keyStrokes <- KeyStroke{Code: vkCode, Keydown: parseWParamToKeydown(wparam)}
+			if vkCode != toggle_hk_kc {
+				kb.keyStrokes <- KeyStroke{Code: vkCode, Keydown: parseWParamToKeydown(wparam)}
+			}
 
 			if shouldByPass {
 				return callNextHookEx(keyboardHook, nCode, wparam, lparam)
@@ -106,10 +108,6 @@ func (kb *kbListener) StartListener() error {
 				}
 
 				if msg.WParam == toggle_hk_id {
-					defer func() {
-						kb.keyStrokes <- KeyStroke{Code: toggle_hk_kc, Keydown: false}
-					}()
-
 					kb.active = !kb.active
 
 					if kb.active {
