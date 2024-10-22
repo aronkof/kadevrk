@@ -5,8 +5,6 @@ import (
 	"fmt"
 	"log"
 	"os"
-	"os/signal"
-	"syscall"
 
 	"github.com/aronkof/kadev-rk/adapters/keyboard"
 	"github.com/aronkof/kadev-rk/adapters/udp"
@@ -52,43 +50,19 @@ func main() {
 		log.Fatalf("startup error: %s", err)
 	}
 
-	go func() {
-		for ks := range kbListener.KeyStrokes() {
-			err = rkc.Send(&pb.KeySignal{Code: int64(ks.Code), Keydown: ks.Keydown, Os: clientOs})
-			if err != nil {
-				fmt.Printf("could not send to KeySignal stream, %s\n", err)
-			}
-		}
-
-		process, err := os.FindProcess(os.Getpid())
+	for ks := range kbListener.KeyStrokes() {
+		err = rkc.Send(&pb.KeySignal{Code: int64(ks.Code), Keydown: ks.Keydown, Os: clientOs})
 		if err != nil {
-			fmt.Println("error finding process:", err)
+			fmt.Printf("could not send to KeySignal stream, %s\n", err)
 		}
+	}
 
-		err = process.Signal(syscall.SIGTERM)
-		if err != nil {
-			fmt.Println("error sending SIGTERM:", err)
-		}
-	}()
-
-	gracefulShutdown(kbListener)
-
-	os.Exit(0)
-}
-
-type Shutdowner interface {
-	Shutdown() error
-}
-
-func gracefulShutdown(kbListener Shutdowner) {
-	signalChannel := make(chan os.Signal, 1)
-	signal.Notify(signalChannel, os.Interrupt, syscall.SIGINT, syscall.SIGTERM)
-	<-signalChannel
-
-	fmt.Println("shutdown signal received, shutting down keyboard listener  ...")
-
-	err := kbListener.Shutdown()
+	err = kbListener.Shutdown()
 	if err != nil {
 		fmt.Printf("error shutting down 'kbListener', %s\n", err)
 	}
+
+	fmt.Println("shutting down rk-client ...")
+
+	os.Exit(0)
 }
