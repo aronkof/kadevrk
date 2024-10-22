@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"os/signal"
+	"syscall"
 
 	"github.com/aronkof/kadev-rk/adapters/keyboard"
 	"github.com/aronkof/kadev-rk/adapters/udp"
@@ -57,5 +59,24 @@ func main() {
 		}
 	}
 
+	gracefulShutdown(kbListener)
+
 	os.Exit(0)
+}
+
+type Shutdowner interface {
+	Shutdown() error
+}
+
+func gracefulShutdown(kbListener Shutdowner) {
+	signalChannel := make(chan os.Signal, 1)
+	signal.Notify(signalChannel, os.Interrupt, syscall.SIGINT, syscall.SIGTERM)
+	<-signalChannel
+
+	fmt.Println("shutdown signal received, shutting down keyboard listener  ...")
+
+	err := kbListener.Shutdown()
+	if err != nil {
+		fmt.Printf("error shutting down 'kbListener', %s\n", err)
+	}
 }

@@ -107,7 +107,6 @@ func (kb *kbListener) StartListener() error {
 
 				if msg.WParam == toggle_hk_id {
 					defer func() {
-						// ensure that the hotkey is being "release" on the server side
 						kb.keyStrokes <- KeyStroke{Code: toggle_hk_kc, Keydown: false}
 					}()
 
@@ -125,7 +124,6 @@ func (kb *kbListener) StartListener() error {
 
 		kb.wg.Wait()
 
-		unhookWindowsHookEx(kb.hHook)
 		close(kb.keyStrokes)
 	}()
 
@@ -144,4 +142,13 @@ func parseWParamToKeydown(wparam WPARAM) bool {
 		fmt.Println("warning: unknown wparam value", parsedWPARAM, "defaulting to 'false' keydown event")
 		return false
 	}
+}
+
+func (kb *kbListener) Shutdown() error {
+	ok := unhookWindowsHookEx(kb.hHook)
+	if ok {
+		return nil
+	}
+
+	return fmt.Errorf("something went wrong while unhooking during shutdown")
 }
