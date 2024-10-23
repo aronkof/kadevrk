@@ -2,7 +2,6 @@ package keyboard
 
 import (
 	"fmt"
-	"sync"
 	"unsafe"
 )
 
@@ -29,7 +28,6 @@ type kbListener struct {
 	keyStrokes chan KeyStroke
 	active     bool
 	hHook      HHOOK
-	wg         *sync.WaitGroup
 	byPassKeys map[int16]bool
 	debug      bool
 }
@@ -67,7 +65,6 @@ func llkpFn(kb *kbListener) HOOKPROC {
 
 func NewKBListener(debug bool, opts ...option) *kbListener {
 	keyStrokes := make(chan KeyStroke)
-	wg := sync.WaitGroup{}
 
 	byPassKeys := make(map[int16]bool, 50)
 	byPassKeys[toggle_hk_kc] = true
@@ -78,7 +75,6 @@ func NewKBListener(debug bool, opts ...option) *kbListener {
 		exitHk:     &Hotkey{0, exit_hk_kc},
 		active:     false,
 		keyStrokes: keyStrokes,
-		wg:         &wg,
 		byPassKeys: byPassKeys,
 		debug:      debug,
 	}
@@ -100,44 +96,41 @@ func (kb *kbListener) StartListener() error {
 		return err
 	}
 
-	kb.wg.Add(1)
-
 	go func() {
 		var msg MSG
 
-		for getMessage(&msg, 0, 0, 0) != 0 {
-			if msg.Message == WM_HOTKEY {
-				if kb.debug {
-					fmt.Print("hotkey detected: ")
-				}
-
-				if msg.WParam == exit_hk_id {
+		for {
+			if getMessage(&msg, 0, 0, 0) != 0 {
+				if msg.Message == WM_HOTKEY {
 					if kb.debug {
-						fmt.Print("exit")
+						fmt.Print("hotkey detected: ")
 					}
 
-					kb.wg.Done()
-					break
-				}
+					if msg.WParam == exit_hk_id {
+						if kb.debug {
+							fmt.Print("exit\n")
+						}
 
-				if msg.WParam == toggle_hk_id {
-					if kb.debug {
-						fmt.Print("toggle")
+						break
 					}
 
-					kb.active = !kb.active
+					if msg.WParam == toggle_hk_id {
+						if kb.debug {
+							fmt.Print("toggle\n")
+						}
 
-					if kb.active {
-						kb.hHook = setWindowsHookEx(WH_KEYBOARD_LL, llkpFn(kb), 0, 0)
-						continue
+						kb.active = !kb.active
+
+						if kb.active {
+							kb.hHook = setWindowsHookEx(WH_KEYBOARD_LL, llkpFn(kb), 0, 0)
+							continue
+						}
+
+						unhookWindowsHookEx(kb.hHook)
 					}
-
-					unhookWindowsHookEx(kb.hHook)
 				}
 			}
 		}
-
-		kb.wg.Wait()
 
 		close(kb.keyStrokes)
 	}()
