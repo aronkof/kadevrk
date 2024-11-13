@@ -17,6 +17,10 @@ type RemoteKeyClient struct {
 }
 
 func NewRemoteKeyClient(host string, port int, debugMode bool) (RemoteKeySender, error) {
+	if debugMode {
+		return &DebugRemoteKeyClient{}, nil
+	}
+
 	serverAddr := net.UDPAddr{Port: port, IP: net.ParseIP(host)}
 
 	conn, err := net.DialUDP("udp", nil, &serverAddr)
