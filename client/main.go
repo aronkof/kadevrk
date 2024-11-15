@@ -43,6 +43,8 @@ func main() {
 		log.Fatalf("could not create new RemoteKeyClient, %s", err)
 	}
 
+	fmt.Println("remote key client created", "pointing to host", host)
+
 	kbListener := keyboard.NewKBListener(debug)
 
 	err = kbListener.StartListener()
