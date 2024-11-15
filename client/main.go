@@ -19,9 +19,10 @@ var (
 )
 
 func main() {
-	flag.StringVar(&clientOs, "os", "windows-10", "client OS (default windows-10)")
 	flag.IntVar(&port, "port", 19901, "port number (default 19901)")
 	flag.BoolVar(&debug, "debug", false, "enables debug mode")
+	flag.StringVar(&clientOs, "os", "windows-10", "client OS (default windows-10)")
+	flag.StringVar(&host, "host", "localhost", "target host")
 
 	flag.Usage = func() {
 		fmt.Fprintf(os.Stderr, "usage: %s [options] <host>\n", os.Args[0])
@@ -29,14 +30,6 @@ func main() {
 	}
 
 	flag.Parse()
-
-	if len(os.Args) < 2 {
-		fmt.Fprintln(os.Stderr, "error: host is required")
-		flag.Usage()
-		os.Exit(1)
-	}
-
-	host := os.Args[0]
 
 	rkc, err := udp.NewRemoteKeyClient(host, port, debug)
 	if err != nil {
