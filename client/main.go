@@ -15,6 +15,7 @@ var (
 	port     int
 	debug    bool
 	clientOs string
+	host     string
 )
 
 func main() {
@@ -28,7 +29,6 @@ func main() {
 	}
 
 	flag.Parse()
-	args := flag.Args()
 
 	if len(os.Args) < 2 {
 		fmt.Fprintln(os.Stderr, "error: host is required")
@@ -36,7 +36,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	host := args[0]
+	host := os.Args[0]
 
 	rkc, err := udp.NewRemoteKeyClient(host, port, debug)
 	if err != nil {
